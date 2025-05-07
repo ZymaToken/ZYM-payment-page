@@ -7,7 +7,6 @@
   <link rel="icon" href="https://raw.githubusercontent.com/ZymaToken/ZYM-payment-page/1f8dfe5f0d69fde660f4f997acc38c545e14450e/favicon.ico" type="image/x-icon">
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <style>
     body {
       margin: 0;
@@ -21,14 +20,13 @@
       padding: 2rem;
     }
     .container {
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0, 0, 0, 0.75);
       padding: 2rem;
       border-radius: 1rem;
-      max-width: 420px;
+      max-width: 400px;
       width: 100%;
       text-align: center;
-      box-shadow: 0 0 25px rgba(255, 255, 255, 0.3);
-      position: relative;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
     }
     h1 img {
       height: 50px;
@@ -97,7 +95,6 @@
       border-radius: 0.5rem;
       font-weight: bold;
       display: none;
-      animation: fadeInDown 0.8s;
     }
     #message.success {
       background-color: #28a745;
@@ -107,6 +104,33 @@
       background-color: #dc3545;
       color: white;
     }
+
+    /* Popup styles */
+    .popup {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.8);
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 400px;
+      text-align: center;
+      display: none;
+      font-size: 1.2rem;
+      z-index: 9999;
+    }
+
+    .popup.error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .popup.success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
   </style>
 </head>
 <body>
@@ -125,8 +149,11 @@
     <div class="info">Required USDT: <span id="requiredUSDT">0</span></div>
     <button id="buyButton">Buy ZYM</button>
     <button id="connectBtn">Connect Wallet</button>
-    <div id="message" class="animate__animated"></div>
+    <div id="message"></div>
   </div>
+
+  <!-- Popup -->
+  <div id="popup" class="popup"></div>
 
   <script>
     const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // BEP20 USDT
@@ -141,13 +168,18 @@
     const requiredUSDT = document.getElementById("requiredUSDT");
     const usdtBalance = document.getElementById("usdtBalance");
     const message = document.getElementById("message");
+    const popup = document.getElementById("popup");
 
     let provider, signer, account;
 
-    function showMessage(text, type = 'error') {
-      message.textContent = text;
-      message.className = `animate__animated animate__fadeInDown ${type}`;
-      message.style.display = 'block';
+    function showPopup(text, type = 'error') {
+      popup.textContent = text;
+      popup.className = `popup ${type}`;
+      popup.style.display = 'block';
+
+      setTimeout(() => {
+        popup.style.display = 'none';
+      }, 4000);
     }
 
     connectBtn.addEventListener("click", async () => {
@@ -165,7 +197,7 @@
         usdtBalance.textContent = numeral(formatted).format('0,0.00') + ' USDT';
         message.style.display = 'none';
       } catch (err) {
-        showMessage("Wallet connection failed.");
+        showPopup("Wallet connection failed.", "error");
       }
     });
 
@@ -195,24 +227,24 @@
 
     buyButton.addEventListener("click", async () => {
       if (!account) {
-        showMessage("Please connect your wallet first.");
+        showPopup("Please connect your wallet first.", "error");
         return;
       }
       try {
         const usdtToSend = parseFloat(requiredUSDT.textContent.replace(/[^\d.]/g, ""));
 
         if (usdtToSend < minUSDT) {
-          showMessage(`Minimum purchase is ${minUSDT} USDT.`);
+          showPopup(`Minimum purchase is ${minUSDT} USDT.`, "error");
           return;
         }
 
         const usdtContract = new ethers.Contract(usdtAddress, ["function transfer(address to, uint amount) returns (bool)"], signer);
         const tx = await usdtContract.transfer(receiverAddress, ethers.parseUnits(usdtToSend.toString(), 18));
         await tx.wait();
-        showMessage("Purchase successful! ZYM tokens will be sent to your wallet shortly.", 'success');
+        showPopup("Purchase successful! ZYM tokens will be sent to your wallet shortly.", 'success');
       } catch (err) {
         console.error(err);
-        showMessage("Purchase failed. Please try again.");
+        showPopup("Purchase failed. Please try again.", "error");
       }
     });
   </script>
