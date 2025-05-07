@@ -2,328 +2,180 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Buy ZYM Token</title>
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.7.4/dist/web3.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/accounting.js/0.4.2/accounting.min.js"></script>
-  <script src="https://kit.fontawesome.com/a2e0e9ec6e.js" crossorigin="anonymous"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZYM Token Purchase</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/numeral/numeral.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
-    :root {
-      --primary: #6366f1;
-      --danger: #ef4444;
-      --success: #10b981;
-      --gray: #e5e7eb;
-      --text: #1f2937;
-      --bg: #f9fafb;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
     body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
+      background: linear-gradient(to right, #0f172a, #1e293b);
+      color: #f8fafc;
+      font-family: 'Segoe UI', sans-serif;
     }
-
-    .card {
-      width: 100%;
+    .container {
       max-width: 500px;
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-      padding: 30px;
-      position: relative;
     }
-
-    .wallet-btn {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .wallet-btn.disconnect {
-      background: var(--danger);
-    }
-
-    .title {
-      font-size: 26px;
-      font-weight: 700;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-
-    .subtitle {
-      font-size: 14px;
-      text-align: center;
-      color: #6b7280;
-      margin-bottom: 30px;
-    }
-
-    .input-group {
-      margin-bottom: 20px;
-    }
-
-    label {
-      font-weight: 600;
-      font-size: 14px;
-      display: block;
-      margin-bottom: 8px;
-    }
-
     input {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      border: 1px solid var(--gray);
-      border-radius: 12px;
-      transition: 0.3s;
+      color: black;
     }
-
-    input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    }
-
-    .percent-buttons {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .percent-buttons button {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid var(--gray);
-      background: #f3f4f6;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: 0.3s;
-      font-weight: 600;
-    }
-
-    .percent-buttons button:hover {
-      background: var(--primary);
-      color: white;
-    }
-
-    .buy-summary {
-      font-size: 16px;
-      text-align: right;
-      margin-top: 6px;
-      color: #374151;
-    }
-
-    .buy-btn {
-      width: 100%;
-      background: var(--success);
-      border: none;
-      padding: 16px;
-      font-size: 16px;
-      border-radius: 12px;
-      color: white;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 20px;
-      transition: 0.3s;
-    }
-
-    .buy-btn:hover {
-      background: #059669;
-    }
-
     .status {
-      margin-top: 20px;
-      padding: 12px;
-      border-radius: 10px;
-      text-align: center;
-      font-weight: 600;
+      margin-top: 1rem;
+      font-weight: 500;
     }
-
-    .status.success {
-      background: #d1fae5;
-      color: #065f46;
-    }
-
     .status.error {
-      background: #fee2e2;
-      color: #991b1b;
+      color: #f87171;
     }
-
-    .status.info {
-      background: #e0f2fe;
-      color: #0369a1;
-    }
-
-    .balance {
-      font-size: 14px;
-      color: #6b7280;
-      text-align: right;
-      margin-bottom: 16px;
+    .status.success {
+      color: #4ade80;
     }
   </style>
 </head>
-<body>
-  <div class="card">
-    <button id="walletBtn" class="wallet-btn">
-      <i class="fa-solid fa-wallet"></i> Connect Wallet
+<body class="min-h-screen flex items-center justify-center px-4">
+  <div class="container bg-white bg-opacity-5 rounded-2xl shadow-xl p-6 w-full">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold text-white">Buy ZYM Token</h1>
+      <button id="disconnectBtn" class="text-sm px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600">Disconnect</button>
+    </div>
+
+    <div id="walletStatus" class="mb-4 text-sm text-gray-200">Wallet not connected</div>
+
+    <button id="connectBtn" class="w-full mb-4 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition">
+      Connect Wallet
     </button>
 
-    <div id="formSection" style="display:none;">
-      <div class="title">Buy ZYM</div>
-      <div class="subtitle">Secure, fast, and direct purchase of ZYM tokens</div>
-
-      <div class="balance" id="balanceDiv">Your USDT Balance: 0</div>
-
-      <div class="input-group">
-        <label for="zymAmount">Enter Amount (ZYM):</label>
-        <input type="text" id="zymAmount" placeholder="e.g., 10,000">
-        <div class="percent-buttons">
-          <button id="btn10">10%</button>
-          <button id="btn25">25%</button>
-          <button id="btn50">50%</button>
-          <button id="btn75">75%</button>
-          <button id="btnMax">Max</button>
+    <div id="purchaseSection" class="hidden">
+      <div class="mb-4">
+        <label for="zymAmount" class="block mb-1">Amount of ZYM</label>
+        <input type="text" id="zymAmount" placeholder="Enter ZYM amount"
+          class="w-full p-2 rounded border border-gray-300" />
+        <div class="text-sm text-gray-300 mt-1" id="userBalance">Your USDT Balance: --</div>
+        <div class="flex space-x-2 mt-2">
+          <button class="percent-btn bg-gray-700 hover:bg-gray-600 text-white py-1 px-2 rounded" data-percent="10">10%</button>
+          <button class="percent-btn bg-gray-700 hover:bg-gray-600 text-white py-1 px-2 rounded" data-percent="25">25%</button>
+          <button class="percent-btn bg-gray-700 hover:bg-gray-600 text-white py-1 px-2 rounded" data-percent="50">50%</button>
+          <button class="percent-btn bg-gray-700 hover:bg-gray-600 text-white py-1 px-2 rounded" data-percent="75">75%</button>
+          <button class="percent-btn bg-gray-700 hover:bg-gray-600 text-white py-1 px-2 rounded" data-percent="100">Max</button>
         </div>
       </div>
 
-      <div class="buy-summary">
-        Amount to Pay (USDT): <span id="usdtAmount">0</span>
+      <div class="mb-4">
+        <label class="block mb-1">Total USDT to Pay</label>
+        <div id="usdtAmount" class="text-xl font-bold text-green-300">0 USDT</div>
       </div>
 
-      <button class="buy-btn" id="buyBtn">Buy ZYM</button>
-      <div id="status" class="status"></div>
+      <button id="buyBtn" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition">
+        Buy ZYM
+      </button>
+
+      <div id="statusMsg" class="status"></div>
     </div>
   </div>
 
   <script>
-    const walletBtn = document.getElementById("walletBtn");
-    const formSection = document.getElementById("formSection");
-    const balanceDiv = document.getElementById("balanceDiv");
-    const statusDiv = document.getElementById("status");
+    const connectBtn = document.getElementById("connectBtn");
+    const disconnectBtn = document.getElementById("disconnectBtn");
+    const walletStatus = document.getElementById("walletStatus");
+    const zymInput = document.getElementById("zymAmount");
+    const usdtAmount = document.getElementById("usdtAmount");
+    const statusMsg = document.getElementById("statusMsg");
     const buyBtn = document.getElementById("buyBtn");
-    const ZYM_PRICE = 0.00019;
-    let userAddress = null;
-    let userUSDTBalance = 100; // Simulated balance
-    let connected = false;
-    let web3;
+    const purchaseSection = document.getElementById("purchaseSection");
+    const balanceDiv = document.getElementById("userBalance");
+    const percentButtons = document.querySelectorAll(".percent-btn");
 
-    function formatNumber(num) {
-      return accounting.formatNumber(num, 2, ",");
-    }
+    const recipient = "0x6C157E7A6e8e2FDB9814b46326c71BCA19B3a92B"; // Your wallet
+    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // USDT BEP20
+    const zymPrice = 0.00019;
+    let provider, signer, userAddress, usdtContract, userBalance;
+
+    const usdtAbi = [
+      "function transfer(address to, uint amount) public returns (bool)",
+      "function balanceOf(address owner) external view returns (uint256)",
+      "function decimals() view returns (uint8)"
+    ];
 
     async function connectWallet() {
-      if (window.ethereum) {
-        try {
-          const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-          userAddress = accounts[0];
-          web3 = new Web3(window.ethereum);
-          connected = true;
-          updateWalletButton();
-          formSection.style.display = "block";
-          balanceDiv.textContent = `Your USDT Balance: ${formatNumber(userUSDTBalance)} USDT`;
-          statusDiv.textContent = "";
-          statusDiv.className = "status";
-        catch (err) {
-  console.error("Connection error:", err);
-  statusDiv.textContent = `Connection failed: ${err.message || err}`;
-  statusDiv.className = "status error";
-}
-      } else {
-        statusDiv.textContent = "Please install MetaMask.";
-        statusDiv.className = "status error";
+      try {
+        if (!window.ethereum) throw new Error("MetaMask not found");
+        provider = new ethers.BrowserProvider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = await provider.getSigner();
+        userAddress = await signer.getAddress();
+        walletStatus.textContent = `Wallet connected`;
+        connectBtn.classList.add("hidden");
+        disconnectBtn.classList.remove("hidden");
+        purchaseSection.classList.remove("hidden");
+
+        usdtContract = new ethers.Contract(usdtAddress, usdtAbi, signer);
+        const balanceRaw = await usdtContract.balanceOf(userAddress);
+        const decimals = await usdtContract.decimals();
+        userBalance = Number(ethers.formatUnits(balanceRaw, decimals));
+        balanceDiv.textContent = `Your USDT Balance: ${userBalance.toFixed(2)}`;
+      } catch (err) {
+        console.error("Connection error:", err);
+        walletStatus.textContent = `Connection failed: ${err.message}`;
+        walletStatus.className = "status error";
       }
     }
 
     function disconnectWallet() {
-      userAddress = null;
-      web3 = null;
-      connected = false;
-      updateWalletButton();
-      formSection.style.display = "none";
-      statusDiv.textContent = "";
-      statusDiv.className = "status";
-      balanceDiv.textContent = "";
+      connectBtn.classList.remove("hidden");
+      disconnectBtn.classList.add("hidden");
+      purchaseSection.classList.add("hidden");
+      walletStatus.textContent = "Wallet not connected";
     }
 
-    function updateWalletButton() {
-      if (connected) {
-        walletBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-        walletBtn.classList.add("disconnect");
-      } else {
-        walletBtn.innerHTML = '<i class="fa-solid fa-wallet"></i> Connect Wallet';
-        walletBtn.classList.remove("disconnect");
-      }
+    function formatNumber(num) {
+      return numeral(num).format("0,0.[000000]");
     }
 
-    walletBtn.addEventListener("click", () => {
-      connected ? disconnectWallet() : connectWallet();
-    });
+    function calculateUSDT(zymAmount) {
+      const total = zymAmount * zymPrice;
+      usdtAmount.textContent = `${formatNumber(total)} USDT`;
+      return total;
+    }
 
-    const zymAmountInput = document.getElementById("zymAmount");
-    zymAmountInput.addEventListener("input", function () {
-      const zymAmount = parseFloat(zymAmountInput.value.replace(/,/g, ""));
-      if (!isNaN(zymAmount) && zymAmount > 0) {
-        const usdtAmount = zymAmount * ZYM_PRICE;
-        document.getElementById("usdtAmount").textContent = formatNumber(usdtAmount);
+    zymInput.addEventListener("input", (e) => {
+      const raw = e.target.value.replace(/,/g, "");
+      const val = parseFloat(raw);
+      if (!isNaN(val)) {
+        e.target.value = formatNumber(val);
+        calculateUSDT(val);
       } else {
-        document.getElementById("usdtAmount").textContent = "0";
+        usdtAmount.textContent = "0 USDT";
       }
     });
 
-    document.getElementById("btn10").addEventListener("click", () => setZymAmount(0.10));
-    document.getElementById("btn25").addEventListener("click", () => setZymAmount(0.25));
-    document.getElementById("btn50").addEventListener("click", () => setZymAmount(0.50));
-    document.getElementById("btn75").addEventListener("click", () => setZymAmount(0.75));
-    document.getElementById("btnMax").addEventListener("click", () => setZymAmount(1));
+    percentButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const percent = parseInt(btn.dataset.percent);
+        const zymAmount = (userBalance / zymPrice) * (percent / 100);
+        zymInput.value = formatNumber(zymAmount);
+        calculateUSDT(zymAmount);
+      });
+    });
 
-    function setZymAmount(percentage) {
-      const zymAmount = (userUSDTBalance * percentage) / ZYM_PRICE;
-      zymAmountInput.value = formatNumber(zymAmount);
-      document.getElementById("usdtAmount").textContent = formatNumber(zymAmount * ZYM_PRICE);
-    }
-
-    buyBtn.addEventListener("click", () => {
-      const zymAmount = parseFloat(zymAmountInput.value.replace(/,/g, ""));
-      if (zymAmount > 0 && zymAmount * ZYM_PRICE <= userUSDTBalance) {
-        const usdtAmount = zymAmount * ZYM_PRICE;
-        statusDiv.className = "status info";
-        statusDiv.textContent = `Purchasing ${formatNumber(zymAmount)} ZYM...`;
-
-        setTimeout(() => {
-          statusDiv.className = "status success";
-          statusDiv.textContent = `Transaction successful. ZYM will be sent to your wallet shortly.`;
-          userUSDTBalance -= usdtAmount;
-          balanceDiv.textContent = `Your USDT Balance: ${formatNumber(userUSDTBalance)} USDT`;
-          zymAmountInput.value = "";
-          document.getElementById("usdtAmount").textContent = "0";
-        }, 2000);
-      } else {
-        statusDiv.className = "status error";
-        statusDiv.textContent = "Invalid or insufficient amount.";
+    buyBtn.addEventListener("click", async () => {
+      try {
+        const zymVal = parseFloat(zymInput.value.replace(/,/g, ""));
+        if (!zymVal || zymVal <= 0) return alert("Enter valid ZYM amount");
+        const usdtVal = calculateUSDT(zymVal);
+        const decimals = await usdtContract.decimals();
+        const tx = await usdtContract.transfer(recipient, ethers.parseUnits(usdtVal.toFixed(6), decimals));
+        await tx.wait();
+        statusMsg.textContent = "Purchase successful. Your ZYM will be sent shortly.";
+        statusMsg.className = "status success";
+      } catch (err) {
+        console.error("Purchase error:", err);
+        statusMsg.textContent = `Transaction failed: ${err.message}`;
+        statusMsg.className = "status error";
       }
     });
+
+    connectBtn.addEventListener("click", connectWallet);
+    disconnectBtn.addEventListener("click", disconnectWallet);
   </script>
 </body>
 </html>
