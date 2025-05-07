@@ -5,33 +5,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Buy Zyma (ZYM)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.6.1/web3.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(to right, #f0f2f5, #dbefff);
-      color: #222;
+      font-family: 'Poppins', sans-serif;
       margin: 0;
       padding: 0;
+      background: linear-gradient(to right, #3a7bd5, #00d2ff);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
     }
 
     .wrapper {
-      max-width: 500px;
-      margin: 60px auto;
-      padding: 30px;
-      background-color: white;
+      background: #fff;
+      color: #333;
+      width: 100%;
+      max-width: 420px;
       border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      padding: 30px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       text-align: center;
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .wrapper:hover {
+      transform: scale(1.05);
     }
 
     h1 {
-      margin-bottom: 10px;
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 20px;
       color: #2E8B57;
     }
 
     p {
-      font-size: 15px;
+      font-size: 16px;
       color: #555;
       margin-bottom: 30px;
     }
@@ -40,9 +54,10 @@
       padding: 12px 24px;
       font-size: 16px;
       border: none;
-      border-radius: 8px;
+      border-radius: 50px;
       cursor: pointer;
-      transition: background 0.3s ease;
+      transition: background 0.3s ease, transform 0.3s ease;
+      margin-top: 20px;
     }
 
     .btn-connect {
@@ -52,6 +67,7 @@
 
     .btn-connect:hover {
       background-color: #256f47;
+      transform: translateY(-3px);
     }
 
     .btn-disconnect {
@@ -59,28 +75,47 @@
       color: white;
     }
 
+    .btn-disconnect:hover {
+      background-color: #e31b2e;
+      transform: translateY(-3px);
+    }
+
     .input-field {
       padding: 12px;
       width: 80%;
-      max-width: 250px;
+      max-width: 280px;
       font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      margin: 20px 0;
+      border: 2px solid #ccc;
+      border-radius: 50px;
+      margin: 15px 0;
+      transition: border 0.3s ease;
     }
 
-    #sendBtn {
+    .input-field:focus {
+      border-color: #2E8B57;
+      outline: none;
+    }
+
+    .info-text {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #888;
+    }
+
+    #buyBtn {
       background-color: #007BFF;
       color: white;
     }
 
-    #sendBtn:hover {
+    #buyBtn:hover {
       background-color: #0056b3;
+      transform: translateY(-3px);
     }
 
     .status {
       margin-top: 20px;
-      font-weight: bold;
+      font-weight: 600;
+      font-size: 16px;
     }
 
     .status.success { color: green; }
@@ -91,14 +126,14 @@
 <body>
   <div class="wrapper">
     <h1>Buy Zyma (ZYM)</h1>
-    <p>Connect your wallet and send USDT to receive Zyma tokens.</p>
+    <p>Connect your wallet to buy Zyma (ZYM) tokens directly with USDT.</p>
     
     <button id="walletBtn" class="btn btn-connect"><i class="fa-solid fa-wallet"></i> Connect Wallet</button>
 
     <div id="formSection" style="display:none;">
-      <input type="number" id="usdtAmount" class="input-field" placeholder="Amount in USDT" min="0" step="0.01" />
-      <br/>
-      <button id="sendBtn" class="btn"><i class="fa-solid fa-paper-plane"></i> Send USDT</button>
+      <input type="number" id="zymAmount" class="input-field" placeholder="Amount in ZYM" min="0" step="0.01" />
+      <p id="usdtAmountText" class="info-text">You need to send <span id="usdtAmount">0</span> USDT to receive your ZYM tokens.</p>
+      <button id="buyBtn" class="btn"><i class="fa-solid fa-shopping-cart"></i> Buy ZYM</button>
     </div>
 
     <div id="status" class="status"></div>
@@ -107,12 +142,13 @@
   <script>
     const walletBtn = document.getElementById("walletBtn");
     const formSection = document.getElementById("formSection");
-    const sendBtn = document.getElementById("sendBtn");
+    const buyBtn = document.getElementById("buyBtn");
     const statusDiv = document.getElementById("status");
 
     let web3;
     let userAddress = null;
 
+    const ZYM_PRICE = 0.00019; // Price of 1 ZYM in USDT
     const USDT_CONTRACT = "0x55d398326f99059fF775485246999027B3197955"; // USDT on BSC
     const RECEIVER_ADDRESS = "0x6C157E7A6e8e2FDB9814b46326c71BCA19B3a92B"; // Your wallet
     const USDT_ABI = [
@@ -167,26 +203,36 @@
       }
     };
 
-    sendBtn.onclick = async () => {
-      const amount = document.getElementById("usdtAmount").value;
-      if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
-        statusDiv.textContent = "Please enter a valid USDT amount.";
+    // Update USDT amount based on ZYM amount entered by the user
+    document.getElementById("zymAmount").addEventListener("input", function () {
+      const zymAmount = parseFloat(this.value);
+      if (!isNaN(zymAmount) && zymAmount > 0) {
+        const usdtRequired = zymAmount * ZYM_PRICE;
+        document.getElementById("usdtAmount").textContent = usdtRequired.toFixed(2);
+      }
+    });
+
+    buyBtn.onclick = async () => {
+      const zymAmount = document.getElementById("zymAmount").value;
+      if (!zymAmount || isNaN(zymAmount) || parseFloat(zymAmount) <= 0) {
+        statusDiv.textContent = "Please enter a valid ZYM amount.";
         statusDiv.className = "status error";
         return;
       }
 
+      const usdtAmount = zymAmount * ZYM_PRICE;
       try {
         const contract = new web3.eth.Contract(USDT_ABI, USDT_CONTRACT);
-        const amountInWei = web3.utils.toWei(amount, "mwei");
-        statusDiv.textContent = "Sending transaction...";
+        const amountInWei = web3.utils.toWei(usdtAmount.toString(), "mwei");
+        statusDiv.textContent = "Processing your purchase...";
         statusDiv.className = "status info";
 
         const tx = await contract.methods.transfer(RECEIVER_ADDRESS, amountInWei).send({ from: userAddress });
-        statusDiv.textContent = "Thank you! Your transaction was successful. Zyma (ZYM) tokens will be sent to your wallet shortly.";
+        statusDiv.textContent = "Thank you! Your purchase was successful. Zyma (ZYM) tokens will be sent to your wallet shortly.";
         statusDiv.className = "status success";
       } catch (err) {
         console.error(err);
-        statusDiv.textContent = "Transaction failed. See console.";
+        statusDiv.textContent = "Transaction failed. See console for details.";
         statusDiv.className = "status error";
       }
     };
