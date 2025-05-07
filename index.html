@@ -245,10 +245,11 @@
           balanceDiv.textContent = `Your USDT Balance: ${formatNumber(userUSDTBalance)} USDT`;
           statusDiv.textContent = "";
           statusDiv.className = "status";
-        } catch (err) {
-          statusDiv.textContent = "Connection failed.";
-          statusDiv.className = "status error";
-        }
+        catch (err) {
+  console.error("Connection error:", err);
+  statusDiv.textContent = `Connection failed: ${err.message || err}`;
+  statusDiv.className = "status error";
+}
       } else {
         statusDiv.textContent = "Please install MetaMask.";
         statusDiv.className = "status error";
