@@ -100,6 +100,11 @@
         const balance = await usdtContract.balanceOf(account);
         const formatted = ethers.formatUnits(balance, 18);
         usdtBalance.textContent = numeral(formatted).format('0,0.00') + ' USDT';
+
+        message.textContent = "";
+      } catch (err) {
+        message.textContent = "Connection failed.";
+      }
       } catch (err) {
         message.textContent = "Connection failed.";
       }
