@@ -1,38 +1,40 @@
 <!DOCTYPE html>
-<html lang="fa">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>خرید توکن BEP-20</title>
+    <title>Buy Zyma (ZYM) Token</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.6.1/web3.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
-        h1 { color: #2E8B57; }
-        button { padding: 15px 25px; background-color: #008CBA; color: white; border: none; cursor: pointer; font-size: 16px; }
+        body { font-family: Arial, sans-serif; padding: 30px; background-color: #f5f5f5; color: #333; }
+        h1 { color: #2E8B57; text-align: center; }
+        button { padding: 15px 25px; background-color: #008CBA; color: white; border: none; cursor: pointer; font-size: 16px; margin-top: 20px; }
         button:disabled { background-color: gray; }
-        .container { margin-top: 20px; }
-        input[type="number"] { padding: 10px; width: 100px; font-size: 16px; }
-        #status { font-size: 18px; color: green; }
+        .container { text-align: center; margin-top: 20px; }
+        input[type="number"] { padding: 10px; width: 150px; font-size: 16px; }
+        #status { font-size: 18px; color: green; margin-top: 15px; }
+        .loading { font-size: 18px; color: orange; margin-top: 15px; }
     </style>
 </head>
 <body>
-    <h1>خرید توکن BEP-20</h1>
-    <p>برای خرید توکن، ابتدا کیف پول خود را متصل کنید، سپس مبلغ تتر (USDT) مورد نظر را وارد کنید.</p>
+    <h1>Buy Zyma (ZYM) Token</h1>
+    <p>To purchase Zyma (ZYM) tokens, connect your wallet and specify the amount of Tether (USDT) you want to send.</p>
     
-    <button id="walletButton">اتصال به کیف پول</button>
+    <button id="walletButton">Connect Wallet</button>
     <div class="container">
-        <input type="number" id="amountInput" placeholder="مبلغ تتر" min="0" step="0.01">
-        <button id="sendButton" style="display: none;">ارسال تتر</button>
+        <input type="number" id="amountInput" placeholder="Amount in USDT" min="0" step="0.01">
+        <button id="sendButton" style="display: none;">Send USDT</button>
     </div>
 
     <div id="status"></div>
+    <div id="loading" class="loading" style="display: none;">Processing transaction...</div>
 
     <script>
         let web3;
         let walletConnected = false;
         let senderAddress;
-        const yourWalletAddress = "آدرس کیف پول شما";  // آدرس کیف پول شما برای دریافت تتر
-        const tokenAddress = "آدرس قرارداد BEP-20 شما";  // آدرس قرارداد توکن BEP-20 شما (USDT)
+        const yourWalletAddress = "0x6C157E7A6e8e2FDB9814b46326c71BCA19B3a92B";  // Replace with your wallet address
+        const tokenAddress = "0xe8180dda225794bbacdf831159c55f9e20e13850";  // Replace with Zyma (ZYM) token contract address
         const tokenABI = [
             {
                 "constant": false,
@@ -59,55 +61,63 @@
             }
         ];
 
-        // بررسی اینکه آیا کیف پول MetaMask یا Trust Wallet در مرورگر موجود است یا خیر
+        // Check if wallet (MetaMask or Trust Wallet) is installed
         if (typeof window.ethereum !== 'undefined') {
-            console.log("کیف پول پیدا شد!");
+            console.log("Wallet detected!");
             web3 = new Web3(window.ethereum);
         } else {
-            alert("متاسفانه کیف پول پیدا نشد. لطفاً از مرورگری که از کیف پول پشتیبانی می‌کند استفاده کنید.");
+            alert("Wallet not found. Please install MetaMask or Trust Wallet.");
         }
 
-        // درخواست اتصال به کیف پول
+        // Connect to wallet
         document.getElementById("walletButton").onclick = async () => {
             if (!walletConnected) {
                 try {
-                    // درخواست دسترسی به حساب‌های کاربر
+                    // Request access to user's accounts
                     await window.ethereum.request({ method: 'eth_requestAccounts' });
                     walletConnected = true;
                     const accounts = await web3.eth.getAccounts();
-                    senderAddress = accounts[0];  // دریافت آدرس کیف پول کاربر
-                    document.getElementById("walletButton").textContent = "کیف پول متصل شد!";
-                    document.getElementById("sendButton").style.display = "inline-block";  // نمایش دکمه ارسال
-                    document.getElementById("status").textContent = "کیف پول با موفقیت متصل شد. حالا می‌توانید مبلغ تتر وارد کنید.";
+                    senderAddress = accounts[0];  // Get the user's wallet address
+                    document.getElementById("walletButton").textContent = "Wallet Connected!";
+                    document.getElementById("sendButton").style.display = "inline-block";  // Show send button
+                    document.getElementById("status").textContent = "Wallet successfully connected. You can now enter the amount of USDT.";
                 } catch (error) {
-                    alert("خطا در اتصال به کیف پول.");
+                    alert("Error connecting to wallet.");
                     console.error(error);
                 }
             }
         };
 
-        // تابع برای ارسال توکن BEP-20 (USDT)
+        // Send ZYM tokens after USDT transfer
         document.getElementById("sendButton").onclick = async () => {
-            const amount = document.getElementById("amountInput").value; // مقدار تتر وارد شده توسط کاربر
+            const amount = document.getElementById("amountInput").value; // Get the amount of USDT entered by the user
 
             if (walletConnected && amount > 0) {
                 try {
-                    const amountInWei = web3.utils.toWei(amount, 'mwei');  // تبدیل مقدار تتر به Mwei (واحد مورد استفاده در BSC برای Tether)
-
-                    // نمونه‌سازی از قرارداد توکن BEP-20 (USDT)
+                    // Convert amount to Mwei (since USDT on BSC uses mwei)
+                    const amountInWei = web3.utils.toWei(amount, 'mwei');
+                    
+                    // Show loading message while the transaction is processing
+                    document.getElementById("loading").style.display = "inline-block";
+                    document.getElementById("status").textContent = "Processing transaction... Please wait.";
+                    
+                    // Create contract instance for the Zyma token (ZYM)
                     const tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
-
-                    // ارسال تتر به آدرس کیف پول شما
+                    
+                    // Send USDT to your wallet address
                     const result = await tokenContract.methods.transfer(yourWalletAddress, amountInWei).send({ from: senderAddress });
 
-                    document.getElementById("status").textContent = "تتر با موفقیت ارسال شد!";
+                    // Success message
+                    document.getElementById("status").textContent = "USDT successfully sent. Transaction successful!";
+                    document.getElementById("loading").style.display = "none";  // Hide loading message
                     console.log(result);
                 } catch (error) {
-                    document.getElementById("status").textContent = "خطا در ارسال تتر.";
+                    document.getElementById("status").textContent = "Error sending USDT.";
+                    document.getElementById("loading").style.display = "none";  // Hide loading message
                     console.error(error);
                 }
             } else {
-                document.getElementById("status").textContent = "لطفاً مقدار معتبر تتر وارد کنید.";
+                document.getElementById("status").textContent = "Please enter a valid amount of USDT.";
             }
         };
     </script>
