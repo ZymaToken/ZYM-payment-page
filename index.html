@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خرید توکن BEP-20</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.6.1/web3.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+        h1 { color: #2E8B57; }
+        button { padding: 15px 25px; background-color: #008CBA; color: white; border: none; cursor: pointer; font-size: 16px; }
+        button:disabled { background-color: gray; }
+        .container { margin-top: 20px; }
+        input[type="number"] { padding: 10px; width: 100px; font-size: 16px; }
+        #status { font-size: 18px; color: green; }
+    </style>
+</head>
+<body>
+    <h1>خرید توکن BEP-20</h1>
+    <p>برای خرید توکن، ابتدا کیف پول خود را متصل کنید، سپس مبلغ تتر (USDT) مورد نظر را وارد کنید.</p>
+    
+    <button id="walletButton">اتصال به کیف پول</button>
+    <div class="container">
+        <input type="number" id="amountInput" placeholder="مبلغ تتر" min="0" step="0.01">
+        <button id="sendButton" style="display: none;">ارسال تتر</button>
+    </div>
+
+    <div id="status"></div>
+
+    <script>
+        let web3;
+        let walletConnected = false;
+        let senderAddress;
+        const yourWalletAddress = "آدرس کیف پول شما";  // آدرس کیف پول شما برای دریافت تتر
+        const tokenAddress = "آدرس قرارداد BEP-20 شما";  // آدرس قرارداد توکن BEP-20 شما (USDT)
+        const tokenABI = [
+            {
+                "constant": false,
+                "inputs": [
+                    {
+                        "name": "_to",
+                        "type": "address"
+                    },
+                    {
+                        "name": "_value",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "transfer",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ];
+
+        // بررسی اینکه آیا کیف پول MetaMask یا Trust Wallet در مرورگر موجود است یا خیر
+        if (typeof window.ethereum !== 'undefined') {
+            console.log("کیف پول پیدا شد!");
+            web3 = new Web3(window.ethereum);
+        } else {
+            alert("متاسفانه کیف پول پیدا نشد. لطفاً از مرورگری که از کیف پول پشتیبانی می‌کند استفاده کنید.");
+        }
+
+        // درخواست اتصال به کیف پول
+        document.getElementById("walletButton").onclick = async () => {
+            if (!walletConnected) {
+                try {
+                    // درخواست دسترسی به حساب‌های کاربر
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    walletConnected = true;
+                    const accounts = await web3.eth.getAccounts();
+                    senderAddress = accounts[0];  // دریافت آدرس کیف پول کاربر
+                    document.getElementById("walletButton").textContent = "کیف پول متصل شد!";
+                    document.getElementById("sendButton").style.display = "inline-block";  // نمایش دکمه ارسال
+                    document.getElementById("status").textContent = "کیف پول با موفقیت متصل شد. حالا می‌توانید مبلغ تتر وارد کنید.";
+                } catch (error) {
+                    alert("خطا در اتصال به کیف پول.");
+                    console.error(error);
+                }
+            }
+        };
+
+        // تابع برای ارسال توکن BEP-20 (USDT)
+        document.getElementById("sendButton").onclick = async () => {
+            const amount = document.getElementById("amountInput").value; // مقدار تتر وارد شده توسط کاربر
+
+            if (walletConnected && amount > 0) {
+                try {
+                    const amountInWei = web3.utils.toWei(amount, 'mwei');  // تبدیل مقدار تتر به Mwei (واحد مورد استفاده در BSC برای Tether)
+
+                    // نمونه‌سازی از قرارداد توکن BEP-20 (USDT)
+                    const tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
+
+                    // ارسال تتر به آدرس کیف پول شما
+                    const result = await tokenContract.methods.transfer(yourWalletAddress, amountInWei).send({ from: senderAddress });
+
+                    document.getElementById("status").textContent = "تتر با موفقیت ارسال شد!";
+                    console.log(result);
+                } catch (error) {
+                    document.getElementById("status").textContent = "خطا در ارسال تتر.";
+                    console.error(error);
+                }
+            } else {
+                document.getElementById("status").textContent = "لطفاً مقدار معتبر تتر وارد کنید.";
+            }
+        };
+    </script>
+</body>
+</html>
