@@ -131,6 +131,11 @@
     });
 
     document.getElementById('buyButton').addEventListener('click', async () => {
+      if (!account) {
+        message.style.color = 'red';
+        message.textContent = "Please connect your wallet first.";
+        return;
+      }
       try {
         const zymAmount = parseFloat(zymInput.value.replace(/,/g, ''));
         if (!account || isNaN(zymAmount) || zymAmount <= 0) return;
