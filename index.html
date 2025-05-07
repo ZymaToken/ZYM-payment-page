@@ -1,248 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ZYM Token Purchase</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buy ZYM Token</title>
+  <link rel="icon" type="image/x-icon" href="https://github.com/ZymaToken/ZYM-payment-page/raw/1f8dfe5f0d69fde660f4f997acc38c545e14450e/favicon.ico" />
+
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- Web3, Ethers & Numeral -->
   <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/numeral/numeral.min.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
   <style>
     body {
-      background: url('https://github.com/ZymaToken/ZYM-payment-page/raw/fc61acce93256cf255f7b9d4c58cc525b2de1213/logo%201.jpg') no-repeat center center fixed;
+      background-image: url('https://github.com/ZymaToken/ZYM-payment-page/raw/fc61acce93256cf255f7b9d4c58cc525b2de1213/logo%201.jpg');
       background-size: cover;
-      color: #f8fafc;
-      font-family: 'Segoe UI', sans-serif;
+      background-position: center;
       min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-
-    .container {
-      max-width: 500px;
-      background: rgba(0, 0, 0, 0.7); 
-      padding: 20px;
-      border-radius: 20px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-      transition: all 0.3s ease-in-out;
-    }
-
-    .container:hover {
-      transform: scale(1.05);
-    }
-
-    .logo {
-      width: 100px;
-      height: auto;
-      margin-bottom: 20px;
-    }
-
-    input {
-      color: black;
-    }
-
-    .status {
-      margin-top: 1rem;
-      font-weight: 500;
-    }
-
-    .status.error {
-      color: #f87171;
-    }
-
-    .status.success {
-      color: #4ade80;
-    }
-
-    .btn {
-      transition: all 0.2s ease;
-    }
-
-    .btn:hover {
-      transform: scale(1.05);
-    }
-    
-    .percent-btn {
-      transition: all 0.3s ease;
-    }
-
-    .percent-btn:hover {
-      background-color: #1e40af;
-    }
-
-    .btn-connect {
-      background-color: #4CAF50;
-      padding: 15px 20px;
-      font-size: 18px;
-      width: 100%;
-      text-align: center;
-      border-radius: 10px;
-      cursor: pointer;
-      color: white;
-    }
-
-    .btn-connect:hover {
-      background-color: #45a049;
-    }
-
-    .hidden {
-      display: none;
+    .overlay {
+      backdrop-filter: blur(10px);
+      background-color: rgba(255, 255, 255, 0.85);
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Logo Section -->
-    <div class="flex justify-center mb-4">
-      <img src="https://github.com/ZymaToken/ZYM-payment-page/raw/fc61acce93256cf255f7b9d4c58cc525b2de1213/logo.png" alt="ZYM Logo" class="logo" />
-    </div>
+  <div class="overlay min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 relative">
 
-    <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold text-white">Buy ZYM Token</h1>
-      <button id="disconnectBtn" class="hidden text-sm px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600">Disconnect</button>
-    </div>
+      <!-- Logo -->
+      <img src="https://github.com/ZymaToken/ZYM-payment-page/raw/fc61acce93256cf255f7b9d4c58cc525b2de1213/logo.png" alt="Zyma Logo" class="w-20 h-20 mx-auto mb-4">
 
-    <div id="walletStatus" class="mb-4 text-sm text-gray-200">Wallet not connected</div>
+      <!-- Wallet Connection -->
+      <button id="connectButton" class="absolute top-4 left-4 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">Connect Wallet</button>
+      <button id="disconnectButton" class="hidden absolute top-4 left-4 px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600">Disconnect</button>
 
-    <button id="connectBtn" class="btn-connect">
-      Connect Wallet
-    </button>
+      <h2 class="text-center text-xl font-bold mb-2">Buy ZYM Token</h2>
 
-    <div id="purchaseSection" class="hidden mt-6">
-      <div class="mb-4">
-        <label for="zymAmount" class="block mb-1 text-gray-300">Amount of ZYM</label>
-        <input type="text" id="zymAmount" placeholder="Enter ZYM amount"
-          class="w-full p-3 rounded-lg text-black border border-gray-300" />
-        <div class="text-sm text-gray-300 mt-1" id="userBalance">Your USDT Balance: --</div>
-        <div class="flex space-x-2 mt-2">
-          <button class="percent-btn bg-gray-700 text-white py-1 px-2 rounded" data-percent="10">10%</button>
-          <button class="percent-btn bg-gray-700 text-white py-1 px-2 rounded" data-percent="25">25%</button>
-          <button class="percent-btn bg-gray-700 text-white py-1 px-2 rounded" data-percent="50">50%</button>
-          <button class="percent-btn bg-gray-700 text-white py-1 px-2 rounded" data-percent="75">75%</button>
-          <button class="percent-btn bg-gray-700 text-white py-1 px-2 rounded" data-percent="100">Max</button>
-        </div>
+      <div class="mb-3">
+        <label class="block text-gray-700 text-sm mb-1">Your USDT Balance:</label>
+        <p id="usdtBalance" class="text-gray-900 font-semibold">Loading...</p>
       </div>
 
+      <!-- Input for ZYM -->
       <div class="mb-4">
-        <label class="block mb-1 text-gray-300">Total USDT to Pay</label>
-        <div id="usdtAmount" class="text-xl font-bold text-green-300">0 USDT</div>
+        <label class="block text-gray-700 text-sm mb-1">Amount of ZYM to Buy:</label>
+        <input type="text" id="zymInput" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" placeholder="Enter ZYM amount">
+        <p class="text-sm mt-1">= <span id="usdtRequired">0</span> USDT</p>
       </div>
 
-      <button id="buyBtn" class="btn btn-connect">
-        Buy ZYM
-      </button>
+      <!-- Percentage Buttons -->
+      <div class="flex justify-between gap-1 mb-4">
+        <button class="percent-btn bg-gray-200 px-2 py-1 rounded text-sm" data-percent="10">10%</button>
+        <button class="percent-btn bg-gray-200 px-2 py-1 rounded text-sm" data-percent="25">25%</button>
+        <button class="percent-btn bg-gray-200 px-2 py-1 rounded text-sm" data-percent="50">50%</button>
+        <button class="percent-btn bg-gray-200 px-2 py-1 rounded text-sm" data-percent="75">75%</button>
+        <button class="percent-btn bg-gray-200 px-2 py-1 rounded text-sm" data-percent="100">Max</button>
+      </div>
 
-      <div id="statusMsg" class="status"></div>
+      <!-- Buy Button -->
+      <button id="buyButton" class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600">Buy ZYM</button>
+
+      <!-- Message -->
+      <p id="message" class="text-center text-sm text-red-500 mt-3"></p>
     </div>
   </div>
 
   <script>
-    const connectBtn = document.getElementById("connectBtn");
-    const disconnectBtn = document.getElementById("disconnectBtn");
-    const walletStatus = document.getElementById("walletStatus");
-    const zymInput = document.getElementById("zymAmount");
-    const usdtAmount = document.getElementById("usdtAmount");
-    const statusMsg = document.getElementById("statusMsg");
-    const buyBtn = document.getElementById("buyBtn");
-    const purchaseSection = document.getElementById("purchaseSection");
-    const balanceDiv = document.getElementById("userBalance");
-    const percentButtons = document.querySelectorAll(".percent-btn");
+    const connectBtn = document.getElementById('connectButton');
+    const disconnectBtn = document.getElementById('disconnectButton');
+    const zymInput = document.getElementById('zymInput');
+    const usdtRequired = document.getElementById('usdtRequired');
+    const usdtBalance = document.getElementById('usdtBalance');
+    const message = document.getElementById('message');
+    const percentBtns = document.querySelectorAll('.percent-btn');
 
-    const recipient = "0x6C157E7A6e8e2FDB9814b46326c71BCA19B3a92B"; // Your wallet
-    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // USDT BEP20
+    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955";
+    const recipient = "0x6C157E7A6e8e2FDB9814b46326c71BCA19B3a92B";
     const zymPrice = 0.00019;
-    let provider, signer, userAddress, usdtContract, userBalance;
 
-    const usdtAbi = [
-      "function transfer(address to, uint amount) public returns (bool)",
-      "function balanceOf(address owner) external view returns (uint256)",
-      "function decimals() view returns (uint8)"
-    ];
+    let provider;
+    let signer;
+    let account;
 
-    async function connectWallet() {
+    connectBtn.addEventListener('click', async () => {
       try {
-        if (!window.ethereum) throw new Error("MetaMask not found");
         provider = new ethers.BrowserProvider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
         signer = await provider.getSigner();
-        userAddress = await signer.getAddress();
-        walletStatus.textContent = `Wallet connected`;
-        connectBtn.classList.add("hidden");
-        disconnectBtn.classList.remove("hidden");
-        purchaseSection.classList.remove("hidden");
+        account = await signer.getAddress();
 
-        usdtContract = new ethers.Contract(usdtAddress, usdtAbi, signer);
-        const balanceRaw = await usdtContract.balanceOf(userAddress);
-        const decimals = await usdtContract.decimals();
-        userBalance = Number(ethers.formatUnits(balanceRaw, decimals));
-        balanceDiv.textContent = `Your USDT Balance: ${userBalance.toFixed(2)}`;
+        connectBtn.classList.add('hidden');
+        disconnectBtn.classList.remove('hidden');
+
+        const usdtContract = new ethers.Contract(usdtAddress, ["function balanceOf(address) view returns (uint256)", "function transfer(address to, uint amount) returns (bool)"], provider);
+        const balance = await usdtContract.balanceOf(account);
+        const formatted = ethers.formatUnits(balance, 18);
+        usdtBalance.textContent = numeral(formatted).format('0,0.00') + ' USDT';
       } catch (err) {
-        console.error("Connection error:", err);
-        walletStatus.textContent = `Connection failed: ${err.message}`;
-        walletStatus.className = "status error";
-      }
-    }
-
-    function disconnectWallet() {
-      connectBtn.classList.remove("hidden");
-      disconnectBtn.classList.add("hidden");
-      purchaseSection.classList.add("hidden");
-      walletStatus.textContent = "Wallet not connected";
-    }
-
-    function formatNumber(num) {
-      return numeral(num).format("0,0.[000000]");
-    }
-
-    function calculateUSDT(zymAmount) {
-      const total = zymAmount * zymPrice;
-      usdtAmount.textContent = `${formatNumber(total)} USDT`;
-      return total;
-    }
-
-    zymInput.addEventListener("input", (e) => {
-      const raw = e.target.value.replace(/,/g, "");
-      const val = parseFloat(raw);
-      if (!isNaN(val)) {
-        e.target.value = formatNumber(val);
-        calculateUSDT(val);
-      } else {
-        usdtAmount.textContent = "0 USDT";
+        message.textContent = "Connection failed.";
       }
     });
 
-    percentButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        const percent = parseInt(btn.dataset.percent);
-        const zymAmount = (userBalance / zymPrice) * (percent / 100);
-        zymInput.value = formatNumber(zymAmount);
-        calculateUSDT(zymAmount);
+    disconnectBtn.addEventListener('click', () => {
+      provider = null;
+      signer = null;
+      account = null;
+      connectBtn.classList.remove('hidden');
+      disconnectBtn.classList.add('hidden');
+      usdtBalance.textContent = 'Disconnected';
+    });
+
+    zymInput.addEventListener('input', () => {
+      const zymAmount = parseFloat(zymInput.value.replace(/,/g, '')) || 0;
+      const required = zymAmount * zymPrice;
+      usdtRequired.textContent = numeral(required).format('0,0.0000');
+    });
+
+    percentBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const percent = parseFloat(btn.dataset.percent);
+        const usdt = parseFloat(usdtBalance.textContent.replace(/,/g, '').replace(' USDT', '')) || 0;
+        const amount = (usdt * percent / 100) / zymPrice;
+        zymInput.value = numeral(amount).format('0,0');
+        zymInput.dispatchEvent(new Event('input'));
       });
     });
 
-    buyBtn.addEventListener("click", async () => {
+    document.getElementById('buyButton').addEventListener('click', async () => {
       try {
-        const zymVal = parseFloat(zymInput.value.replace(/,/g, ""));
-        if (!zymVal || zymVal <= 0) return alert("Enter valid ZYM amount");
-        const usdtVal = calculateUSDT(zymVal);
-        const decimals = await usdtContract.decimals();
-        const tx = await usdtContract.transfer(recipient, ethers.parseUnits(usdtVal.toFixed(6), decimals));
+        const zymAmount = parseFloat(zymInput.value.replace(/,/g, ''));
+        if (!account || isNaN(zymAmount) || zymAmount <= 0) return;
+        const amountInUSDT = ethers.parseUnits((zymAmount * zymPrice).toFixed(18), 18);
+
+        const usdtContract = new ethers.Contract(usdtAddress, ["function transfer(address to, uint amount) returns (bool)"], signer);
+        const tx = await usdtContract.transfer(recipient, amountInUSDT);
         await tx.wait();
-        statusMsg.textContent = "Purchase successful. Your ZYM will be sent shortly.";
-        statusMsg.className = "status success";
-      } catch (err) {
-        console.error("Purchase error:", err);
-        // Show a popup message with user-friendly error
-        alert("Purchase failed. Please try again.");
-        statusMsg.textContent = "Transaction failed: Purchase failed.";
-        statusMsg.className = "status error";
+
+        message.style.color = 'green';
+        message.textContent = "Your purchase was successful. ZYM tokens will be sent to your wallet shortly.";
+      } catch (error) {
+        console.error(error);
+        message.style.color = 'red';
+        message.textContent = "Purchase failed. Please try again.";
       }
     });
-
-    connectBtn.addEventListener("click", connectWallet);
-    disconnectBtn.addEventListener("click", disconnectWallet);
   </script>
 </body>
 </html>
