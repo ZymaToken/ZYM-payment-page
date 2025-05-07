@@ -1,125 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buy Zyma (ZYM) Token</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.6.1/web3.min.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 30px; background-color: #f5f5f5; color: #333; }
-        h1 { color: #2E8B57; text-align: center; }
-        button { padding: 15px 25px; background-color: #008CBA; color: white; border: none; cursor: pointer; font-size: 16px; margin-top: 20px; }
-        button:disabled { background-color: gray; }
-        .container { text-align: center; margin-top: 20px; }
-        input[type="number"] { padding: 10px; width: 150px; font-size: 16px; }
-        #status { font-size: 18px; color: green; margin-top: 15px; }
-        .loading { font-size: 18px; color: orange; margin-top: 15px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Buy Zyma (ZYM)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.6.1/web3.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #f0f2f5, #dbefff);
+      color: #222;
+      margin: 0;
+      padding: 0;
+    }
+
+    .wrapper {
+      max-width: 500px;
+      margin: 60px auto;
+      padding: 30px;
+      background-color: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      color: #2E8B57;
+    }
+
+    p {
+      font-size: 15px;
+      color: #555;
+      margin-bottom: 30px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .btn-connect {
+      background-color: #2E8B57;
+      color: white;
+    }
+
+    .btn-connect:hover {
+      background-color: #256f47;
+    }
+
+    .btn-disconnect {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .input-field {
+      padding: 12px;
+      width: 80%;
+      max-width: 250px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin: 20px 0;
+    }
+
+    #sendBtn {
+      background-color: #007BFF;
+      color: white;
+    }
+
+    #sendBtn:hover {
+      background-color: #0056b3;
+    }
+
+    .status {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    .status.success { color: green; }
+    .status.error { color: red; }
+    .status.info { color: orange; }
+  </style>
 </head>
 <body>
-    <h1>Buy Zyma (ZYM) Token</h1>
-    <p>To purchase Zyma (ZYM) tokens, connect your wallet and specify the amount of Tether (USDT) you want to send.</p>
+  <div class="wrapper">
+    <h1>Buy Zyma (ZYM)</h1>
+    <p>Connect your wallet and send USDT to receive Zyma tokens.</p>
     
-    <button id="walletButton">Connect Wallet</button>
-    <div class="container">
-        <input type="number" id="amountInput" placeholder="Amount in USDT" min="0" step="0.01">
-        <button id="sendButton" style="display: none;">Send USDT</button>
+    <button id="walletBtn" class="btn btn-connect"><i class="fa-solid fa-wallet"></i> Connect Wallet</button>
+
+    <div id="formSection" style="display:none;">
+      <input type="number" id="usdtAmount" class="input-field" placeholder="Amount in USDT" min="0" step="0.01" />
+      <br/>
+      <button id="sendBtn" class="btn"><i class="fa-solid fa-paper-plane"></i> Send USDT</button>
     </div>
 
-    <div id="status"></div>
-    <div id="loading" class="loading" style="display: none;">Processing transaction...</div>
+    <div id="status" class="status"></div>
+  </div>
 
-    <script>
-        let web3;
-        let walletConnected = false;
-        let senderAddress;
-        const yourWalletAddress = "0x6C157E7A6e8e2FDB9814b46326c71BCA19B3a92B";  // Replace with your wallet address
-        const tokenAddress = "0xe8180dda225794bbacdf831159c55f9e20e13850";  // Replace with Zyma (ZYM) token contract address
-        const tokenABI = [
-            {
-                "constant": false,
-                "inputs": [
-                    {
-                        "name": "_to",
-                        "type": "address"
-                    },
-                    {
-                        "name": "_value",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "transfer",
-                "outputs": [
-                    {
-                        "name": "",
-                        "type": "bool"
-                    }
-                ],
-                "payable": false,
-                "stateMutability": "nonpayable",
-                "type": "function"
-            }
-        ];
+  <script>
+    const walletBtn = document.getElementById("walletBtn");
+    const formSection = document.getElementById("formSection");
+    const sendBtn = document.getElementById("sendBtn");
+    const statusDiv = document.getElementById("status");
 
-        // Check if wallet (MetaMask or Trust Wallet) is installed
-        if (typeof window.ethereum !== 'undefined') {
-            console.log("Wallet detected!");
-            web3 = new Web3(window.ethereum);
-        } else {
-            alert("Wallet not found. Please install MetaMask or Trust Wallet.");
+    let web3;
+    let userAddress = null;
+
+    const USDT_CONTRACT = "0x55d398326f99059fF775485246999027B3197955"; // USDT on BSC
+    const RECEIVER_ADDRESS = "0x6C157E7A6e8e2FDB9814b46326c71BCA19B3a92B"; // Your wallet
+    const USDT_ABI = [
+      {
+        "constant": false,
+        "inputs": [
+          { "name": "_to", "type": "address" },
+          { "name": "_value", "type": "uint256" }
+        ],
+        "name": "transfer",
+        "outputs": [{ "name": "", "type": "bool" }],
+        "type": "function"
+      }
+    ];
+
+    async function connectWallet() {
+      if (window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+          userAddress = accounts[0];
+          web3 = new Web3(window.ethereum);
+          walletBtn.textContent = "Disconnect Wallet";
+          walletBtn.classList.remove("btn-connect");
+          walletBtn.classList.add("btn-disconnect");
+          formSection.style.display = "block";
+          statusDiv.textContent = "Wallet connected: " + userAddress;
+          statusDiv.className = "status success";
+        } catch (err) {
+          statusDiv.textContent = "Connection failed.";
+          statusDiv.className = "status error";
         }
+      } else {
+        alert("Please install MetaMask or Trust Wallet.");
+      }
+    }
 
-        // Connect to wallet
-        document.getElementById("walletButton").onclick = async () => {
-            if (!walletConnected) {
-                try {
-                    // Request access to user's accounts
-                    await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    walletConnected = true;
-                    const accounts = await web3.eth.getAccounts();
-                    senderAddress = accounts[0];  // Get the user's wallet address
-                    document.getElementById("walletButton").textContent = "Wallet Connected!";
-                    document.getElementById("sendButton").style.display = "inline-block";  // Show send button
-                    document.getElementById("status").textContent = "Wallet successfully connected. You can now enter the amount of USDT.";
-                } catch (error) {
-                    alert("Error connecting to wallet.");
-                    console.error(error);
-                }
-            }
-        };
+    function disconnectWallet() {
+      userAddress = null;
+      walletBtn.textContent = "Connect Wallet";
+      walletBtn.classList.remove("btn-disconnect");
+      walletBtn.classList.add("btn-connect");
+      formSection.style.display = "none";
+      statusDiv.textContent = "Wallet disconnected.";
+      statusDiv.className = "status info";
+    }
 
-        // Send ZYM tokens after USDT transfer
-        document.getElementById("sendButton").onclick = async () => {
-            const amount = document.getElementById("amountInput").value; // Get the amount of USDT entered by the user
+    walletBtn.onclick = () => {
+      if (userAddress) {
+        disconnectWallet();
+      } else {
+        connectWallet();
+      }
+    };
 
-            if (walletConnected && amount > 0) {
-                try {
-                    // Convert amount to Mwei (since USDT on BSC uses mwei)
-                    const amountInWei = web3.utils.toWei(amount, 'mwei');
-                    
-                    // Show loading message while the transaction is processing
-                    document.getElementById("loading").style.display = "inline-block";
-                    document.getElementById("status").textContent = "Processing transaction... Please wait.";
-                    
-                    // Create contract instance for the Zyma token (ZYM)
-                    const tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
-                    
-                    // Send USDT to your wallet address
-                    const result = await tokenContract.methods.transfer(yourWalletAddress, amountInWei).send({ from: senderAddress });
+    sendBtn.onclick = async () => {
+      const amount = document.getElementById("usdtAmount").value;
+      if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+        statusDiv.textContent = "Please enter a valid USDT amount.";
+        statusDiv.className = "status error";
+        return;
+      }
 
-                    // Success message
-                    document.getElementById("status").textContent = "USDT successfully sent. Transaction successful!";
-                    document.getElementById("loading").style.display = "none";  // Hide loading message
-                    console.log(result);
-                } catch (error) {
-                    document.getElementById("status").textContent = "Error sending USDT.";
-                    document.getElementById("loading").style.display = "none";  // Hide loading message
-                    console.error(error);
-                }
-            } else {
-                document.getElementById("status").textContent = "Please enter a valid amount of USDT.";
-            }
-        };
-    </script>
+      try {
+        const contract = new web3.eth.Contract(USDT_ABI, USDT_CONTRACT);
+        const amountInWei = web3.utils.toWei(amount, "mwei");
+        statusDiv.textContent = "Sending transaction...";
+        statusDiv.className = "status info";
+
+        const tx = await contract.methods.transfer(RECEIVER_ADDRESS, amountInWei).send({ from: userAddress });
+        statusDiv.textContent = "Thank you! Your transaction was successful. Zyma (ZYM) tokens will be sent to your wallet shortly.";
+        statusDiv.className = "status success";
+      } catch (err) {
+        console.error(err);
+        statusDiv.textContent = "Transaction failed. See console.";
+        statusDiv.className = "status error";
+      }
+    };
+  </script>
 </body>
 </html>
