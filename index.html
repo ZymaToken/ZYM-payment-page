@@ -4,14 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Zyma Token Purchase</title>
-  <link rel="icon" href="https://raw.githubusercontent.com/ZymaToken/ZYM-payment-page/1f8dfe5f0d69fde660f4f997acc38c545e14450e/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="https://raw.githubusercontent.com/ZymaToken/buyzyma/main/favicon.ico" type="image/x-icon">
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
   <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: url('https://raw.githubusercontent.com/ZymaToken/ZYM-payment-page/fc61acce93256cf255f7b9d4c58cc525b2de1213/logo%201.jpg') no-repeat center center fixed;
+      background: url('https://raw.githubusercontent.com/ZymaToken/buyzyma/main/logo%201.jpg') no-repeat center center fixed;
       background-size: cover;
       color: #fff;
       display: flex;
@@ -27,6 +27,7 @@
       width: 100%;
       text-align: center;
       box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+      position: relative;
     }
     h1 img {
       height: 50px;
@@ -95,6 +96,7 @@
       border-radius: 0.5rem;
       font-weight: bold;
       display: none;
+      animation: fadeIn 0.5s;
     }
     #message.success {
       background-color: #28a745;
@@ -104,39 +106,16 @@
       background-color: #dc3545;
       color: white;
     }
-
-    /* Popup styles */
-    .popup {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(255, 255, 255, 0.8);
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 400px;
-      text-align: center;
-      display: none;
-      font-size: 1.2rem;
-      z-index: 9999;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
     }
-
-    .popup.error {
-      background-color: #f8d7da;
-      color: #721c24;
-    }
-
-    .popup.success {
-      background-color: #d4edda;
-      color: #155724;
-    }
-
   </style>
 </head>
 <body>
   <button id="disconnectBtn" class="disconnect hidden">Disconnect</button>
   <div class="container">
-    <h1><img src="https://raw.githubusercontent.com/ZymaToken/ZYM-payment-page/fc61acce93256cf255f7b9d4c58cc525b2de1213/logo.png" alt="Zyma Logo"> Buy ZYM</h1>
+    <h1><img src="https://raw.githubusercontent.com/ZymaToken/buyzyma/main/logo.png" alt="Zyma Logo"> Buy ZYM</h1>
     <div class="info">Your USDT Balance: <span id="usdtBalance">0</span></div>
     <input type="number" id="tokenAmount" placeholder="Enter ZYM amount" min="0" />
     <div class="percentage-buttons">
@@ -152,11 +131,8 @@
     <div id="message"></div>
   </div>
 
-  <!-- Popup -->
-  <div id="popup" class="popup"></div>
-
   <script>
-    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // BEP20 USDT
+    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955";
     const receiverAddress = "0x6C157E7A6e8e2FDB9814b46326c71BCA19B3a92B";
     const tokenPrice = 0.00019;
     const minUSDT = 100;
@@ -168,26 +144,58 @@
     const requiredUSDT = document.getElementById("requiredUSDT");
     const usdtBalance = document.getElementById("usdtBalance");
     const message = document.getElementById("message");
-    const popup = document.getElementById("popup");
 
     let provider, signer, account;
 
-    function showPopup(text, type = 'error') {
-      popup.textContent = text;
-      popup.className = `popup ${type}`;
-      popup.style.display = 'block';
+    function showMessage(text, type = 'error') {
+      message.textContent = text;
+      message.className = type === 'success' ? 'success' : 'error';
+      message.style.display = 'block';
+      setTimeout(() => message.style.display = 'none', 4000);
+    }
 
-      setTimeout(() => {
-        popup.style.display = 'none';
-      }, 4000);
+    async function switchToBSC() {
+      const bscParams = {
+        chainId: '0x38',
+        chainName: 'Binance Smart Chain',
+        nativeCurrency: {
+          name: 'BNB',
+          symbol: 'BNB',
+          decimals: 18
+        },
+        rpcUrls: ['https://bsc-dataseed.binance.org/'],
+        blockExplorerUrls: ['https://bscscan.com']
+      };
+      try {
+        const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+        if (currentChainId !== bscParams.chainId) {
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: bscParams.chainId }],
+          });
+        }
+      } catch (switchError) {
+        if (switchError.code === 4902) {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [bscParams],
+            });
+          } catch (addError) {
+            showMessage("Please switch to Binance Smart Chain manually in your wallet.");
+          }
+        } else {
+          showMessage("Please switch to Binance Smart Chain manually in your wallet.");
+        }
+      }
     }
 
     connectBtn.addEventListener("click", async () => {
       try {
+        await switchToBSC();
         provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
         account = await signer.getAddress();
-
         connectBtn.classList.add("hidden");
         disconnectBtn.classList.remove("hidden");
 
@@ -197,7 +205,7 @@
         usdtBalance.textContent = numeral(formatted).format('0,0.00') + ' USDT';
         message.style.display = 'none';
       } catch (err) {
-        showPopup("Wallet connection failed.", "error");
+        showMessage("Wallet connection failed.");
       }
     });
 
@@ -227,24 +235,30 @@
 
     buyButton.addEventListener("click", async () => {
       if (!account) {
-        showPopup("Please connect your wallet first.", "error");
+        showMessage("Please connect your wallet first.");
         return;
       }
       try {
+        await switchToBSC();
         const usdtToSend = parseFloat(requiredUSDT.textContent.replace(/[^\d.]/g, ""));
+        const balance = parseFloat(usdtBalance.textContent.replace(/[^\d.]/g, ""));
 
         if (usdtToSend < minUSDT) {
-          showPopup(`Minimum purchase is ${minUSDT} USDT.`, "error");
+          showMessage(`Minimum purchase is ${minUSDT} USDT.`);
+          return;
+        }
+        if (usdtToSend > balance) {
+          showMessage("Insufficient USDT balance.");
           return;
         }
 
         const usdtContract = new ethers.Contract(usdtAddress, ["function transfer(address to, uint amount) returns (bool)"], signer);
         const tx = await usdtContract.transfer(receiverAddress, ethers.parseUnits(usdtToSend.toString(), 18));
         await tx.wait();
-        showPopup("Purchase successful! ZYM tokens will be sent to your wallet shortly.", 'success');
+        showMessage("Purchase successful! ZYM tokens will be sent to your wallet shortly.", 'success');
       } catch (err) {
         console.error(err);
-        showPopup("Purchase failed. Please try again.", "error");
+        showMessage("Purchase failed. Please try again.");
       }
     });
   </script>
