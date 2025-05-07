@@ -234,7 +234,9 @@
         statusMsg.className = "status success";
       } catch (err) {
         console.error("Purchase error:", err);
-        statusMsg.textContent = `Transaction failed: ${err.message}`;
+        // Show a popup message with user-friendly error
+        alert("Purchase failed. Please try again.");
+        statusMsg.textContent = "Transaction failed: Purchase failed.";
         statusMsg.className = "status error";
       }
     });
