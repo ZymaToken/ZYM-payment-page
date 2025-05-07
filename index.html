@@ -7,6 +7,7 @@
   <link rel="icon" href="https://raw.githubusercontent.com/ZymaToken/ZYM-payment-page/1f8dfe5f0d69fde660f4f997acc38c545e14450e/favicon.ico" type="image/x-icon">
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <style>
     body {
       margin: 0;
@@ -20,12 +21,14 @@
       padding: 2rem;
     }
     .container {
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.85);
       padding: 2rem;
       border-radius: 1rem;
-      max-width: 400px;
+      max-width: 420px;
       width: 100%;
       text-align: center;
+      box-shadow: 0 0 25px rgba(255, 255, 255, 0.3);
+      position: relative;
     }
     h1 img {
       height: 50px;
@@ -46,20 +49,31 @@
       border: none;
       border-radius: 0.5rem;
       cursor: pointer;
-      background-color: #28a745;
-      color: white;
       transition: background 0.3s;
     }
-    button:hover {
+    #buyButton {
+      background-color: #28a745;
+      color: white;
+    }
+    #buyButton:hover {
       background-color: #218838;
+    }
+    #connectBtn {
+      background-color: #007bff;
+      color: white;
+    }
+    #connectBtn:hover {
+      background-color: #0056b3;
     }
     .disconnect {
       position: absolute;
       top: 15px;
       left: 15px;
-      font-size: 0.9rem;
-      padding: 5px 10px;
+      font-size: 0.8rem;
+      padding: 4px 8px;
+      border-radius: 4px;
       background-color: #dc3545;
+      color: white;
     }
     .hidden { display: none; }
     .percentage-buttons {
@@ -70,11 +84,28 @@
     .percentage-buttons button {
       flex: 1;
       margin: 0 3px;
-      background: #007bff;
+      background: #17a2b8;
+      color: white;
     }
     .info {
       margin-top: 10px;
       font-size: 0.9rem;
+    }
+    #message {
+      margin-top: 1rem;
+      padding: 10px;
+      border-radius: 0.5rem;
+      font-weight: bold;
+      display: none;
+      animation: fadeInDown 0.8s;
+    }
+    #message.success {
+      background-color: #28a745;
+      color: white;
+    }
+    #message.error {
+      background-color: #dc3545;
+      color: white;
     }
   </style>
 </head>
@@ -94,13 +125,14 @@
     <div class="info">Required USDT: <span id="requiredUSDT">0</span></div>
     <button id="buyButton">Buy ZYM</button>
     <button id="connectBtn">Connect Wallet</button>
-    <div id="message" class="info"></div>
+    <div id="message" class="animate__animated"></div>
   </div>
 
   <script>
     const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // BEP20 USDT
     const receiverAddress = "0x6C157E7A6e8e2FDB9814b46326c71BCA19B3a92B";
     const tokenPrice = 0.00019;
+    const minUSDT = 100;
 
     const connectBtn = document.getElementById("connectBtn");
     const disconnectBtn = document.getElementById("disconnectBtn");
@@ -111,6 +143,12 @@
     const message = document.getElementById("message");
 
     let provider, signer, account;
+
+    function showMessage(text, type = 'error') {
+      message.textContent = text;
+      message.className = `animate__animated animate__fadeInDown ${type}`;
+      message.style.display = 'block';
+    }
 
     connectBtn.addEventListener("click", async () => {
       try {
@@ -125,9 +163,9 @@
         const balance = await usdtContract.balanceOf(account);
         const formatted = ethers.formatUnits(balance, 18);
         usdtBalance.textContent = numeral(formatted).format('0,0.00') + ' USDT';
-        message.textContent = "";
+        message.style.display = 'none';
       } catch (err) {
-        message.textContent = "Connection failed.";
+        showMessage("Wallet connection failed.");
       }
     });
 
@@ -157,21 +195,24 @@
 
     buyButton.addEventListener("click", async () => {
       if (!account) {
-        message.style.color = 'red';
-        message.textContent = "Please connect your wallet first.";
+        showMessage("Please connect your wallet first.");
         return;
       }
       try {
         const usdtToSend = parseFloat(requiredUSDT.textContent.replace(/[^\d.]/g, ""));
+
+        if (usdtToSend < minUSDT) {
+          showMessage(`Minimum purchase is ${minUSDT} USDT.`);
+          return;
+        }
+
         const usdtContract = new ethers.Contract(usdtAddress, ["function transfer(address to, uint amount) returns (bool)"], signer);
         const tx = await usdtContract.transfer(receiverAddress, ethers.parseUnits(usdtToSend.toString(), 18));
         await tx.wait();
-        message.style.color = 'lightgreen';
-        message.textContent = "Purchase successful! ZYM tokens will be sent to your wallet shortly.";
+        showMessage("Purchase successful! ZYM tokens will be sent to your wallet shortly.", 'success');
       } catch (err) {
         console.error(err);
-        message.style.color = 'red';
-        message.textContent = "Purchase failed. Please try again.";
+        showMessage("Purchase failed. Please try again.");
       }
     });
   </script>
