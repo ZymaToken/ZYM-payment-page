@@ -192,6 +192,7 @@
           formSection.style.display = "block";
           balanceDiv.textContent = `Your USDT Balance: ${formatNumber(userUSDTBalance)} USDT`;
           statusDiv.textContent = "";
+          statusDiv.className = "status";
         } catch (err) {
           statusDiv.textContent = "Connection failed.";
           statusDiv.className = "status error";
@@ -209,6 +210,7 @@
       updateWalletButton();
       formSection.style.display = "none";
       statusDiv.textContent = "";
+      statusDiv.className = "status";
       balanceDiv.textContent = "";
     }
 
